@@ -49,56 +49,35 @@
           <span>StreamVault</span>
         </div>
       </div>
-      
       <nav class="sidebar-nav">
         <div class="nav-section">
           <div class="nav-section-title">Library</div>
           <div class="nav-item active" data-section="all">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="7" height="7" rx="1"/>
-              <rect x="14" y="3" width="7" height="7" rx="1"/>
-              <rect x="14" y="14" width="7" height="7" rx="1"/>
-              <rect x="3" y="14" width="7" height="7" rx="1"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
             All Channels
           </div>
           <div class="nav-item" data-section="favorites">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
-            Favorites
-            <span class="nav-badge" id="favorites-count">0</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Favorites <span class="nav-badge" id="favorites-count">0</span>
           </div>
           <div class="nav-item" data-section="recent">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-            Recently Played
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Recent
           </div>
           <div class="nav-item" data-section="custom">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="16"/>
-              <line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-            Custom Channels
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Custom
           </div>
         </div>
-        
         <div class="nav-section">
           <div class="nav-section-title">Playlists</div>
           <div id="playlists-nav" class="playlist-list"></div>
           <div class="nav-item" id="add-playlist-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Playlist
           </div>
         </div>
       </nav>
-      
       <div class="sidebar-footer">
         <button class="btn btn-secondary btn-sm" id="logout-btn" style="width: 100%">Sign Out</button>
       </div>
@@ -106,33 +85,14 @@
 
     <main class="main-content">
       <header class="top-bar">
-        <button class="btn-icon" id="mobile-menu-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="3" y1="12" x2="21" y2="12"/>
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
-        </button>
-        
+        <button class="btn-icon" id="mobile-menu-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
         <div class="search-container">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" id="search-input" class="search-input" placeholder="Search channels...">
         </div>
-        
         <div class="top-bar-actions">
-          <select id="category-filter" class="category-filter">
-            <option value="">All Categories</option>
-          </select>
-          <button class="btn-icon" id="add-custom-btn" title="Add Custom Channel">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="16"/>
-              <line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-          </button>
+          <select id="category-filter" class="category-filter"><option value="">All Categories</option></select>
+          <button class="btn-icon" id="add-custom-btn" title="Add Custom Channel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></button>
         </div>
       </header>
 
@@ -145,26 +105,17 @@
               <div class="player-channel-category" id="player-channel-category"></div>
             </div>
             <div class="player-controls">
-              <button class="player-fullscreen-btn" id="fullscreen-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="15 3 21 3 21 9"/>
-                  <polyline points="9 21 3 21 3 15"/>
-                </svg>
-              </button>
+              <button class="player-fullscreen-btn" id="fullscreen-btn">⛶</button>
             </div>
           </div>
         </section>
-
         <div id="loading-state" class="loading-overlay hidden">
           <div class="spinner"></div>
           <div class="loading-text">Loading channels...</div>
         </div>
-
         <section id="channels-section" class="section">
           <div class="section-header">
-            <h2 class="section-title">
-              <span id="section-title-text">All Channels</span>
-            </h2>
+            <h2 class="section-title"><span id="section-title-text">All Channels</span></h2>
             <span id="channel-count">0 channels</span>
           </div>
           <div id="channel-grid" class="channel-grid"></div>
@@ -190,29 +141,29 @@
       <div class="modal-body">
         <div id="m3u-tab">
           <div class="form-group">
-            <label for="playlist-name">Playlist Name</label>
+            <label>Playlist Name</label>
             <input type="text" id="playlist-name" class="form-input" placeholder="My Playlist">
           </div>
           <div class="form-group">
-            <label for="m3u-url">M3U URL</label>
+            <label>M3U URL</label>
             <textarea id="m3u-url" class="form-textarea" placeholder="Paste M3U URL..."></textarea>
           </div>
         </div>
         <div id="xtream-tab" class="hidden">
           <div class="form-group">
-            <label for="xtream-name">Account Name</label>
+            <label>Account Name</label>
             <input type="text" id="xtream-name" class="form-input" placeholder="My Account">
           </div>
           <div class="form-group">
-            <label for="xtream-server">Server URL</label>
+            <label>Server URL</label>
             <input type="text" id="xtream-server" class="form-input" placeholder="http://server:port">
           </div>
           <div class="form-group">
-            <label for="xtream-user">Username</label>
+            <label>Username</label>
             <input type="text" id="xtream-user" class="form-input">
           </div>
           <div class="form-group">
-            <label for="xtream-pass">Password</label>
+            <label>Password</label>
             <input type="password" id="xtream-pass" class="form-input">
           </div>
         </div>
@@ -232,19 +183,19 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="custom-name">Channel Name</label>
+          <label>Channel Name</label>
           <input type="text" id="custom-name" class="form-input">
         </div>
         <div class="form-group">
-          <label for="custom-url">Stream URL</label>
+          <label>Stream URL</label>
           <input type="text" id="custom-url" class="form-input">
         </div>
         <div class="form-group">
-          <label for="custom-logo">Logo URL</label>
+          <label>Logo URL</label>
           <input type="text" id="custom-logo" class="form-input">
         </div>
         <div class="form-group">
-          <label for="custom-category">Category</label>
+          <label>Category</label>
           <input type="text" id="custom-category" class="form-input">
         </div>
       </div>
