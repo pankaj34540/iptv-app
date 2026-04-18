@@ -1,4 +1,5 @@
-// StreamVault IPTV App - FINAL VERSION
+// StreamVault IPTV - Complete Fixed Code
+
 const CONFIG = {
   CREDENTIALS: { username: 'Pankaj34540', password: 'Subha@9938' },
   STORAGE_KEYS: {
@@ -9,8 +10,7 @@ const CONFIG = {
     LAST_PLAYLIST: 'iptv_last_playlist',
     AUTH: 'iptv_auth'
   },
-  MAX_RECENT: 20,
-  DEBOUNCE_DELAY: 300
+  MAX_RECENT: 20
 };
 
 const state = {
@@ -30,14 +30,6 @@ const state = {
 };
 
 const $ = id => document.getElementById(id);
-
-function debounce(func, wait) {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -102,14 +94,13 @@ function handleLogin(e) {
     showApp();
     showToast('Welcome back!');
   } else {
-    showToast('Wrong username or password!', 'error');
+    showToast('Wrong credentials!', 'error');
   }
 }
 
 function handleLogout() {
   sessionStorage.removeItem(CONFIG.STORAGE_KEYS.AUTH);
   state.channels = [];
-  state.filteredChannels = [];
   checkAuth();
   showToast('Logged out');
 }
@@ -143,14 +134,15 @@ function parseM3U(content) {
 
 async function fetchM3U(url) {
   const res = await fetch(`/api/fetch?url=${encodeURIComponent(url)}`);
-  if (!res.ok) throw new Error('Playlist fetch failed');
+  if (!res.ok) throw new Error('Failed to fetch playlist');
   return parseM3U(await res.text());
 }
 
 async function fetchXtream(server, user, pass) {
   const res = await fetch(`/api/xtream/streams?server=${encodeURIComponent(server)}&user=${encodeURIComponent(user)}&pass=${encodeURIComponent(pass)}`);
-  if (!res.ok) throw new Error('Xtream fetch failed');
+  if (!res.ok) throw new Error('Failed to fetch Xtream');
   const data = await res.json();
+  if (!Array.isArray(data)) throw new Error('Bad response');
   return data.map(ch => ({
     id: generateId(),
     name: ch.name || 'Unknown',
@@ -159,6 +151,49 @@ async function fetchXtream(server, user, pass) {
     url: `${server.replace(/\/$/, '')}/live/${user}/${pass}/${ch.stream_id}.m3u8`
   }));
 }
+
+// --- MISSING FUNCTIONS ADDED HERE ---
+
+async function addPlaylist(type, data) {
+  const playlist = {
+    id: generateId(),
+    type,
+    name: data.name,
+    addedAt: Date.now()
+  };
+  
+  if (type === 'm3u') {
+    playlist.url = data.url;
+  } else {
+    playlist.server = data.server;
+    playlist.user = data.user;
+    playlist.pass = data.pass;
+  }
+  
+  state.playlists.push(playlist);
+  saveToStorage(CONFIG.STORAGE_KEYS.PLAYLISTS, state.playlists);
+  renderPlaylistsNav();
+  await loadPlaylist(playlist.id);
+}
+
+function addCustomChannel(data) {
+  const channel = {
+    id: generateId(),
+    name: data.name,
+    url: data.url,
+    logo: data.logo || '',
+    category: data.category || 'Custom',
+    isCustom: true
+  };
+  
+  state.customChannels.push(channel);
+  saveToStorage(CONFIG.STORAGE_KEYS.CUSTOM, state.customChannels);
+  state.channels.push(channel);
+  renderChannels();
+  showToast('Channel added!');
+}
+
+// -------------------------------------
 
 async function loadPlaylist(id) {
   const p = state.playlists.find(x => x.id === id);
@@ -176,10 +211,30 @@ async function loadPlaylist(id) {
     renderChannels();
     showToast(`Loaded ${state.channels.length} channels`);
   } catch (e) {
+    console.error(e);
     showToast(e.message, 'error');
   } finally {
     showLoading(false);
   }
+}
+
+function deletePlaylist(id) {
+  state.playlists = state.playlists.filter(p => p.id !== id);
+  saveToStorage(CONFIG.STORAGE_KEYS.PLAYLISTS, state.playlists);
+  renderPlaylistsNav();
+  showToast('Playlist deleted');
+}
+
+function deleteCustomChannel(id) {
+  state.customChannels = state.customChannels.filter(c => c.id !== id);
+  saveToStorage(CONFIG.STORAGE_KEYS.CUSTOM, state.customChannels);
+  state.channels = state.channels.filter(c => c.id !== id);
+  renderChannels();
+  showToast('Channel deleted');
+}
+
+function showLoading(show) {
+  $('loading-state')?.classList.toggle('hidden', !show);
 }
 
 function renderPlaylistsNav() {
@@ -191,82 +246,19 @@ function renderPlaylistsNav() {
         <div class="playlist-item-name">${escapeHtml(p.name)}</div>
         <div class="playlist-item-type">${p.type}</div>
       </div>
-      <button class="btn-icon btn-sm delete-playlist" data-id="${p.id}">🗑</button>
+      <button class="btn-icon btn-sm delete-pl-btn" data-id="${p.id}">🗑</button>
     </div>
   `).join('');
   
   nav.querySelectorAll('.playlist-item').forEach(el => {
     el.addEventListener('click', (e) => {
-      if (e.target.classList.contains('delete-playlist')) {
+      if (e.target.classList.contains('delete-pl-btn')) {
         e.stopPropagation();
         deletePlaylist(el.dataset.id);
       } else {
         loadPlaylist(el.dataset.id);
       }
     });
-  });
-}
-
-function deletePlaylist(id) {
-  state.playlists = state.playlists.filter(p => p.id !== id);
-  saveToStorage(CONFIG.STORAGE_KEYS.PLAYLISTS, state.playlists);
-  renderPlaylistsNav();
-  showToast('Playlist removed');
-}
-
-function renderChannels() {
-  applyFilters();
-  const grid = $('channel-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  if ($('channel-count')) $('channel-count').textContent = `${state.filteredChannels.length} channels`;
-  
-  if (state.filteredChannels.length === 0) {
-    $('empty-state')?.classList.remove('hidden');
-    return;
-  }
-  $('empty-state')?.classList.add('hidden');
-  
-  state.filteredChannels.forEach(ch => {
-    const card = document.createElement('div');
-    card.className = `channel-card ${state.currentChannel?.id === ch.id ? 'playing' : ''}`;
-    card.dataset.id = ch.id;
-    const isFav = state.favorites.includes(ch.id);
-    
-    card.innerHTML = `
-      <div class="channel-logo">${ch.logo ? `<img src="${escapeHtml(ch.logo)}">` : '📺'}</div>
-      <div class="channel-info">
-        <div class="channel-name">${escapeHtml(ch.name)}</div>
-        <div class="channel-category">${escapeHtml(ch.category)}</div>
-      </div>
-      <div class="channel-actions">
-        <button class="channel-action-btn favorite ${isFav?'active':''}" data-action="fav">♥</button>
-        <button class="channel-action-btn" data-action="copy">📋</button>
-        ${ch.isCustom ? `<button class="channel-action-btn" data-action="del">🗑</button>` : ''}
-      </div>
-    `;
-    
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.channel-actions')) return;
-      playChannel(ch);
-    });
-    
-    card.querySelector('[data-action="fav"]').onclick = (e) => {
-      e.stopPropagation();
-      toggleFavorite(ch.id);
-    };
-    card.querySelector('[data-action="copy"]').onclick = (e) => {
-      e.stopPropagation();
-      navigator.clipboard.writeText(ch.url);
-      showToast('URL Copied');
-    };
-    if (card.querySelector('[data-action="del"]')) {
-      card.querySelector('[data-action="del"]').onclick = (e) => {
-        e.stopPropagation();
-        deleteCustomChannel(ch.id);
-      };
-    }
-    grid.appendChild(card);
   });
 }
 
@@ -281,15 +273,13 @@ function playChannel(ch) {
   document.querySelectorAll('.channel-card').forEach(c => c.classList.toggle('playing', c.dataset.id === ch.id));
   $('player-section').scrollIntoView({ behavior: 'smooth' });
   
-  if (Hls && Hls.isSupported()) {
+  if (typeof Hls !== 'undefined' && Hls.isSupported()) {
     if (state.hls) state.hls.destroy();
     state.hls = new Hls();
     state.hls.loadSource(ch.url);
     state.hls.attachMedia(player);
     state.hls.on(Hls.Events.MANIFEST_PARSED, () => player.play().catch(() => {}));
-    state.hls.on(Hls.Events.ERROR, (e, data) => {
-      if (data.fatal) showToast('Stream Offline or Error', 'error');
-    });
+    state.hls.on(Hls.Events.ERROR, () => showToast('Stream error (maybe offline)', 'error'));
   } else {
     player.src = ch.url;
     player.play().catch(() => {});
@@ -304,14 +294,6 @@ function toggleFavorite(id) {
   saveToStorage(CONFIG.STORAGE_KEYS.FAVORITES, state.favorites);
   $('favorites-count').textContent = state.favorites.length;
   renderChannels();
-}
-
-function deleteCustomChannel(id) {
-  state.customChannels = state.customChannels.filter(c => c.id !== id);
-  saveToStorage(CONFIG.STORAGE_KEYS.CUSTOM, state.customChannels);
-  state.channels = state.channels.filter(c => c.id !== id);
-  renderChannels();
-  showToast('Channel Deleted');
 }
 
 function applyFilters() {
@@ -339,8 +321,108 @@ function updateCategoryFilter() {
   });
 }
 
-function showLoading(show) {
-  $('loading-state')?.classList.toggle('hidden', !show);
+function renderChannels() {
+  applyFilters();
+  const grid = $('channel-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  if ($('channel-count')) $('channel-count').textContent = `${state.filteredChannels.length} channels`;
+  
+  if (state.filteredChannels.length === 0) {
+    $('empty-state')?.classList.remove('hidden');
+    return;
+  }
+  $('empty-state')?.classList.add('hidden');
+  
+  state.filteredChannels.forEach(ch => {
+    const card = document.createElement('div');
+    card.className = `channel-card ${state.currentChannel?.id === ch.id ? 'playing' : ''}`;
+    card.dataset.id = ch.id;
+    const isFav = state.favorites.includes(ch.id);
+    
+    card.innerHTML = `
+      <div class="channel-logo">${ch.logo ? `<img src="${escapeHtml(ch.logo)}" onerror="this.style.display='none'">` : '📺'}</div>
+      <div class="channel-info">
+        <div class="channel-name">${escapeHtml(ch.name)}</div>
+        <div class="channel-category">${escapeHtml(ch.category)}</div>
+      </div>
+      <div class="channel-actions">
+        <button class="channel-action-btn favorite ${isFav?'active':''}" data-action="fav">♥</button>
+        <button class="channel-action-btn" data-action="copy">📋</button>
+        ${ch.isCustom ? `<button class="channel-action-btn" data-action="del">🗑</button>` : ''}
+      </div>
+    `;
+    
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.channel-actions')) return;
+      playChannel(ch);
+    });
+    
+    card.querySelector('[data-action="fav"]').onclick = (e) => { e.stopPropagation(); toggleFavorite(ch.id); };
+    card.querySelector('[data-action="copy"]').onclick = (e) => { e.stopPropagation(); navigator.clipboard.writeText(ch.url); showToast('Copied!'); };
+    if (card.querySelector('[data-action="del"]')) {
+      card.querySelector('[data-action="del"]').onclick = (e) => { e.stopPropagation(); deleteCustomChannel(ch.id); };
+    }
+    grid.appendChild(card);
+  });
+}
+
+function openModal(m) { m?.classList.add('active'); }
+function closeModal(m) { m?.classList.remove('active'); }
+
+function handlePlaylistSave() {
+  const isM3u = document.querySelector('.modal-tab.active').dataset.tab === 'm3u';
+  
+  if (isM3u) {
+    const name = $('playlist-name').value.trim();
+    const url = $('m3u-url').value.trim();
+    if (!name || !url) {
+      showToast('Please fill Name and URL', 'error');
+      return;
+    }
+    addPlaylist('m3u', { name, url });
+  } else {
+    const name = $('xtream-name').value.trim();
+    const server = $('xtream-server').value.trim();
+    const user = $('xtream-user').value.trim();
+    const pass = $('xtream-pass').value;
+    if (!name || !server || !user || !pass) {
+      showToast('Please fill all fields', 'error');
+      return;
+    }
+    addPlaylist('xtream', { name, server, user, pass });
+  }
+  
+  // Clear inputs
+  $('playlist-name').value = '';
+  $('m3u-url').value = '';
+  $('xtream-name').value = '';
+  $('xtream-server').value = '';
+  $('xtream-user').value = '';
+  $('xtream-pass').value = '';
+  
+  closeModal($('playlist-modal'));
+}
+
+function handleCustomSave() {
+  const name = $('custom-name').value.trim();
+  const url = $('custom-url').value.trim();
+  const logo = $('custom-logo').value.trim();
+  const cat = $('custom-category').value.trim();
+  
+  if (!name || !url) {
+    showToast('Name and URL required', 'error');
+    return;
+  }
+  
+  addCustomChannel({ name, url, logo, category: cat });
+  
+  $('custom-name').value = '';
+  $('custom-url').value = '';
+  $('custom-logo').value = '';
+  $('custom-category').value = '';
+  
+  closeModal($('custom-modal'));
 }
 
 function initializeApp() {
@@ -348,6 +430,7 @@ function initializeApp() {
   $('favorites-count').textContent = state.favorites.length;
   renderPlaylistsNav();
   
+  // Navigation
   document.querySelectorAll('.nav-item[data-section]').forEach(item => {
     item.onclick = () => {
       state.currentSection = item.dataset.section;
@@ -358,21 +441,29 @@ function initializeApp() {
     };
   });
   
-  $('search-input').oninput = debounce(e => {
-    state.searchQuery = e.target.value;
-    renderChannels();
-  }, 300);
+  // Search
+  let searchTimeout;
+  $('search-input').oninput = (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      state.searchQuery = e.target.value;
+      renderChannels();
+    }, 300);
+  };
   
-  $('category-filter').onchange = e => {
+  // Category Filter
+  $('category-filter').onchange = (e) => {
     state.categoryFilter = e.target.value;
     renderChannels();
   };
   
+  // Buttons
   $('add-playlist-btn').onclick = () => openModal($('playlist-modal'));
   $('save-playlist-btn').onclick = handlePlaylistSave;
   $('add-custom-btn').onclick = () => openModal($('custom-modal'));
   $('save-custom-btn').onclick = handleCustomSave;
   
+  // Tabs
   document.querySelectorAll('.modal-tab').forEach(tab => {
     tab.onclick = () => {
       document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
@@ -383,49 +474,27 @@ function initializeApp() {
     };
   });
   
+  // Close Modals
   document.querySelectorAll('[data-close-modal]').forEach(btn => {
     btn.onclick = () => closeModal(btn.closest('.modal-overlay'));
   });
   
+  // Mobile
   $('mobile-menu-btn').onclick = () => $('sidebar').classList.toggle('open');
+  
+  // Fullscreen
   $('fullscreen-btn').onclick = () => {
     const v = $('video-player');
-    if (!document.fullscreenElement) v.requestFullscreen(); else document.exitFullscreen();
+    if (!document.fullscreenElement) v.requestFullscreen();
+    else document.exitFullscreen();
   };
   
+  // Load saved
   if (state.currentPlaylistId) loadPlaylist(state.currentPlaylistId);
   else renderChannels();
 }
 
-function handlePlaylistSave() {
-  const tab = document.querySelector('.modal-tab.active').dataset.tab;
-  if (tab === 'm3u') {
-    const name = $('playlist-name').value.trim();
-    const url = $('m3u-url').value.trim();
-    if (!name || !url) return showToast('Fill all fields', 'error');
-    addPlaylist('m3u', { name, url });
-  } else {
-    const name = $('xtream-name').value.trim();
-    const server = $('xtream-server').value.trim();
-    const user = $('xtream-user').value.trim();
-    const pass = $('xtream-pass').value;
-    if (!name || !server || !user || !pass) return showToast('Fill all fields', 'error');
-    addPlaylist('xtream', { name, server, user, pass });
-  }
-  closeModal($('playlist-modal'));
-}
-
-function handleCustomSave() {
-  const name = $('custom-name').value.trim();
-  const url = $('custom-url').value.trim();
-  if (!name || !url) return showToast('Name and URL required', 'error');
-  addCustomChannel({ name, url, logo: $('custom-logo').value, category: $('custom-category').value });
-  closeModal($('custom-modal'));
-}
-
-function openModal(m) { m?.classList.add('active'); }
-function closeModal(m) { m?.classList.remove('active'); }
-
+// Start
 document.addEventListener('DOMContentLoaded', () => {
   $('login-form').onsubmit = handleLogin;
   $('logout-btn').onclick = handleLogout;
